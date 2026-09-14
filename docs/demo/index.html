@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>belarusian-asr</title>
+<meta name="description" content="Belarusian speech recognition on a CPU: benchmark on FLEURS and real transcriptions next to Whisper.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #f6f5f1;
+    --surface: #ffffff;
+    --ink: #1d1c1a;
+    --muted: #625f58;
+    --rule: #dedbd3;
+    --accent: #b8323f;          /* the red of the Belarusian white-red-white */
+    --accent-soft: #f5dfe1;
+    --good: #2f6b45;
+    --good-soft: #dcebe0;
+    --miss: #9a3b1f;
+    --miss-soft: #f6e1d6;
+    --serif: "Literata", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #161514; --surface: #1f1e1c; --ink: #edeae3; --muted: #a8a397; --rule: #36342f;
+      --accent: #e0707a; --accent-soft: #3a2426; --good: #86c79a; --good-soft: #1f3326; --miss: #eb9a7c; --miss-soft: #3b271f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #161514; --surface: #1f1e1c; --ink: #edeae3; --muted: #a8a397; --rule: #36342f;
+    --accent: #e0707a; --accent-soft: #3a2426; --good: #86c79a; --good-soft: #1f3326; --miss: #eb9a7c; --miss-soft: #3b271f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.6 var(--sans); padding-inline: 20px; }
+  main { max-width: 980px; margin: 0 auto; padding-block: 48px 72px; display: grid; gap: 56px; }
+  header { display: grid; gap: 14px; border-bottom: 4px solid var(--accent); padding-bottom: 28px; }
+  .eyebrow { font: 500 13px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  h1 { font: 700 clamp(34px, 6vw, 56px)/1.05 var(--serif); margin: 0; text-wrap: balance; }
+  h2 { font: 700 26px/1.2 var(--serif); margin: 0 0 16px; text-wrap: balance; }
+  p { margin: 0; max-width: 68ch; }
+  .lede { font-size: 19px; color: var(--ink); }
+  .be { color: var(--muted); font-style: italic; }
+  .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .links a { font: 500 14px/1 var(--sans); color: var(--ink); text-decoration: none; border: 1px solid var(--rule);
+             background: var(--surface); padding: 10px 14px; border-radius: 4px; }
+  .links a:hover, .links a:focus-visible { border-color: var(--accent); outline: none; }
+  a { color: var(--accent); }
+  .headline { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .figure { background: var(--surface); border: 1px solid var(--rule); padding: 18px; }
+  .figure b { display: block; font: 700 36px/1 var(--serif); font-variant-numeric: tabular-nums; }
+  .figure span { color: var(--muted); font-size: 14px; }
+  .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; min-width: 620px; }
+  th, td { text-align: right; padding: 10px 14px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { font: 600 12px/1.3 var(--sans); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  tr.ours td { font-weight: 600; }
+  tr.ours td:first-child { box-shadow: inset 4px 0 0 var(--accent); }
+  .note { color: var(--muted); font-size: 14px; margin-top: 10px; }
+  .samples { display: grid; gap: 18px; }
+  .sample { background: var(--surface); border: 1px solid var(--rule); padding: 18px; display: grid; gap: 12px; }
+  .sample-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+  .sample-head span { font: 400 13px/1 var(--mono); color: var(--muted); }
+  audio { width: 100%; max-width: 420px; height: 36px; }
+  .line { display: grid; grid-template-columns: 170px 1fr; gap: 12px; align-items: baseline; }
+  .line .who { font: 500 12px/1.4 var(--mono); color: var(--muted); }
+  .line .who em { font-style: normal; display: block; color: var(--ink); }
+  .line .said { font-size: 17px; line-height: 1.55; }
+  .ref .said { font-family: var(--serif); }
+  ins { text-decoration: none; background: var(--miss-soft); color: var(--miss); border-radius: 2px; padding: 0 2px; }
+  del { background: var(--good-soft); color: var(--good); text-decoration: line-through; border-radius: 2px; padding: 0 2px; }
+  pre { margin: 0; background: var(--surface); border: 1px solid var(--rule); padding: 16px; overflow-x: auto;
+        font: 14px/1.6 var(--mono); }
+  footer { color: var(--muted); font-size: 14px; border-top: 1px solid var(--rule); padding-top: 20px; display: grid; gap: 8px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 14px; color: var(--muted); }
+  @media (max-width: 620px) { .line { grid-template-columns: 1fr; gap: 2px; } }
+  @media (prefers-reduced-motion: no-preference) { .links a { transition: border-color .15s; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Open source · Apache-2.0 · CPU only</div>
+    <h1>Belarusian speech recognition that runs on a CPU</h1>
+    <p class="lede">NVIDIA's Belarusian FastConformer, packaged for ONNX Runtime, with a server that speaks OpenAI's and whisper.cpp's APIs. Measured on FLEURS against Whisper large-v3.</p>
+    <p class="be">Беларускае распазнаванне маўлення на звычайным працэсары.</p>
+    <nav class="links" aria-label="Project links">
+      <a href="https://github.com/YauhenBichel/belarusian-asr">GitHub</a>
+      <a href="https://pypi.org/project/belarusian-asr/">PyPI</a>
+      <a href="https://github.com/YauhenBichel/belarusian-asr/blob/main/docs/BENCHMARKS.md">Benchmark details</a>
+    </nav>
+  </header>
+
+  <section aria-labelledby="numbers">
+    <h2 id="numbers">How accurate</h2>
+    <div class="headline" id="headline"></div>
+  </section>
+
+  <section aria-labelledby="bench">
+    <h2 id="bench">Benchmark</h2>
+    <p id="compare-caption" class="note" style="margin: 0 0 12px"></p>
+    <div class="table-wrap"><table id="compare-table"></table></div>
+    <p class="note">CER and WER are corpus rates after lower-casing and removing punctuation. "No digits": FLEURS writes numbers as digits and this model says them in words, which is right but scored as wrong.</p>
+    <p id="full-caption" class="note" style="margin: 28px 0 12px"></p>
+    <div class="table-wrap"><table id="length-table"></table></div>
+  </section>
+
+  <section aria-labelledby="listen">
+    <h2 id="listen">Listen and compare</h2>
+    <div class="legend"><span><del>struck</del> in the reference: missed</span><span><ins>marked</ins> in an output: not in the reference</span></div>
+    <div class="samples" id="samples"></div>
+  </section>
+
+  <section aria-labelledby="use">
+    <h2 id="use">Use it</h2>
+<pre>pip install "belarusian-asr[server]"
+belarusian-asr transcribe clip.wav
+belarusian-asr serve --port 11805      # POST /v1/audio/transcriptions, POST /inference</pre>
+  </section>
+
+  <footer>
+    <p>Model: <a href="https://huggingface.co/nvidia/stt_be_fastconformer_hybrid_large_pc">NVIDIA stt_be_fastconformer_hybrid_large_pc</a>, CC BY 4.0, trained on Mozilla Common Voice; ONNX export by OpenVoiceOS. Audio and references: <a href="https://huggingface.co/datasets/google/fleurs">FLEURS</a> (Conneau et al., 2022), CC BY 4.0. Comparison: whisper.cpp with ggml large-v3.</p>
+    <p id="measured"></p>
+  </footer>
+</main>
+<script>
+(function () {
+  const pct = (x) => (x * 100).toFixed(1) + " %";
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const norm = (s) => s.toLowerCase().replace(/[’ʼ]/g, "'").replace(/[^\p{L}\p{N}' ]+/gu, " ").split(/\s+/).filter(Boolean);
+  const ours = (name) => name.startsWith("belarusian-asr");
+
+  // Word alignment (longest common subsequence) for highlighting.
+  function align(ref, hyp) {
+    const a = norm(ref), b = norm(hyp), n = a.length, m = b.length;
+    const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+    for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--)
+      dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    const keepA = new Set(), keepB = new Set();
+    for (let i = 0, j = 0; i < n && j < m;) {
+      if (a[i] === b[j]) { keepA.add(i); keepB.add(j); i++; j++; } else if (dp[i + 1][j] >= dp[i][j + 1]) i++; else j++;
+    }
+    return { a, b, keepA, keepB };
+  }
+  const mark = (words, keep, tag) => words.map((w, i) => keep.has(i) ? esc(w) : `<${tag}>${esc(w)}</${tag}>`).join(" ");
+
+  function row(name, s) {
+    return `<tr class="${ours(name) ? "ours" : ""}"><td>${esc(name)}</td><td>${pct(s.all.cer)}</td><td>${pct(s.all.wer)}</td>` +
+      `<td>${pct(s.no_digits.cer)}</td><td>${pct(s.no_digits.wer)}</td><td>${s.seconds_per_clip}</td><td>${s.real_time_factor}</td></tr>`;
+  }
+
+  fetch("results.json").then((r) => r.json()).then((d) => {
+    const cmp = d.compare, full = d.full;
+    const names = Object.keys(cmp.systems), mine = names.find(ours), other = names.find((n) => !ours(n));
+    const f = full.systems[Object.keys(full.systems).find(ours)];
+    document.getElementById("headline").innerHTML = [
+      [pct(f.no_digits.cer), `character error rate, FLEURS test, ${f.no_digits.clips} sentences without digits`],
+      [pct(f.all.wer), `word error rate, all ${f.clips} test sentences`],
+      [other ? (cmp.systems[other].seconds_per_clip / cmp.systems[mine].seconds_per_clip).toFixed(0) + "×" : "-", `faster than ${other || "Whisper"} on the same CPU`],
+    ].map(([big, small]) => `<div class="figure"><b>${big}</b><span>${esc(small)}</span></div>`).join("");
+
+    document.getElementById("compare-caption").textContent = `${cmp.dataset}: the first ${cmp.clips} sentences, ${cmp.audio_seconds_mean} s of audio each on average.`;
+    document.getElementById("compare-table").innerHTML =
+      "<thead><tr><th>system</th><th>CER</th><th>WER</th><th>CER, no digits</th><th>WER, no digits</th><th>s per clip</th><th>real-time factor</th></tr></thead><tbody>" +
+      names.map((n) => row(n, cmp.systems[n])).join("") + "</tbody>";
+
+    const lengths = Object.keys(f.by_length);
+    document.getElementById("full-caption").textContent = `All ${full.clips} test sentences, belarusian-asr, by clip length (character error rate, sentences in brackets):`;
+    document.getElementById("length-table").innerHTML =
+      "<thead><tr><th>length</th>" + lengths.map((k) => `<th>${esc(k)}</th>`).join("") + "</tr></thead><tbody><tr class=\"ours\"><td>CER</td>" +
+      lengths.map((k) => `<td>${pct(f.by_length[k].cer)} (${f.by_length[k].clips})</td>`).join("") + "</tr></tbody>";
+
+    document.getElementById("samples").innerHTML = d.samples.map((s) => {
+      const lines = Object.entries(s.outputs).map(([name, o]) => {
+        const al = align(s.reference, o.text);
+        return `<div class="line"><div class="who"><em>${esc(name)}</em>CER ${pct(o.cer)}</div><div class="said">${mark(al.b, al.keepB, "ins")}</div></div>`;
+      });
+      const best = s.outputs[mine] ? align(s.reference, s.outputs[mine].text) : null;
+      const ref = best ? mark(best.a, best.keepA, "del") : esc(s.reference);
+      return `<article class="sample"><div class="sample-head"><audio controls preload="none" src="${esc(s.audio)}"></audio><span>FLEURS ${esc(s.id)} · ${s.seconds} s</span></div>` +
+        `<div class="line ref"><div class="who"><em>reference</em>FLEURS</div><div class="said">${ref}</div></div>${lines.join("")}</article>`;
+    }).join("");
+    document.getElementById("measured").textContent = `Measured with belarusian-asr bench on a 32-core AMD CPU, 12 threads per system.`;
+  }).catch((e) => {
+    document.getElementById("headline").innerHTML = `<p>Results could not be loaded (${esc(e.message)}).</p>`;
+  });
+})();
+</script>
+</body>
+</html>
