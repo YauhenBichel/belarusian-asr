@@ -73,6 +73,8 @@
   .ref .said { font-family: var(--serif); }
   ins { text-decoration: none; background: var(--miss-soft); color: var(--miss); border-radius: 2px; padding: 0 2px; }
   del { background: var(--good-soft); color: var(--good); text-decoration: line-through; border-radius: 2px; padding: 0 2px; }
+  .foreign { outline: 2px solid var(--miss); outline-offset: 1px; border-radius: 2px; font-weight: 600; color: var(--miss); }
+  .not-be { display: block; color: var(--miss); }
   pre { margin: 0; background: var(--surface); border: 1px solid var(--rule); padding: 16px; overflow-x: auto;
         font: 14px/1.6 var(--mono); }
   footer { color: var(--muted); font-size: 14px; border-top: 1px solid var(--rule); padding-top: 20px; display: grid; gap: 8px; }
@@ -90,7 +92,6 @@
     <p class="be">Беларускае распазнаванне маўлення на звычайным працэсары.</p>
     <nav class="links" aria-label="Project links">
       <a href="https://github.com/YauhenBichel/belarusian-asr">GitHub</a>
-      <a href="https://pypi.org/project/belarusian-asr/">PyPI</a>
       <a href="https://github.com/YauhenBichel/belarusian-asr/blob/main/docs/BENCHMARKS.md">Benchmark details</a>
     </nav>
   </header>
@@ -104,20 +105,21 @@
     <h2 id="bench">Benchmark</h2>
     <p id="compare-caption" class="note" style="margin: 0 0 12px"></p>
     <div class="table-wrap"><table id="compare-table"></table></div>
-    <p class="note">CER and WER are corpus rates after lower-casing and removing punctuation. "No digits": FLEURS writes numbers as digits and this model says them in words, which is right but scored as wrong.</p>
+    <p class="note">CER and WER are corpus rates after lower-casing and removing punctuation. belarusian-asr writes numbers as digits, like FLEURS mostly does; "no digits" shows the sentences whose reference has no digits, where a number written differently cannot count against either system.</p>
     <p id="full-caption" class="note" style="margin: 28px 0 12px"></p>
     <div class="table-wrap"><table id="length-table"></table></div>
   </section>
 
   <section aria-labelledby="listen">
     <h2 id="listen">Listen and compare</h2>
-    <div class="legend"><span><del>struck</del> in the reference: missed</span><span><ins>marked</ins> in an output: not in the reference</span></div>
+    <p class="note" style="margin: 0 0 12px">The reference and belarusian-asr are Belarusian. Whisper large-v3 is shown exactly as it answered, and that is the problem this project solves: it mixes Russian and Ukrainian into Belarusian ("приправляна", "країна", "же" instead of "жа"). Letters that do not exist in Belarusian are boxed.</p>
+    <div class="legend"><span><del>struck</del> in the reference: missed</span><span><ins>marked</ins> in an output: not in the reference</span><span><span class="foreign">и</span> <span class="foreign">ї</span> not a Belarusian letter (Russian or Ukrainian)</span></div>
     <div class="samples" id="samples"></div>
   </section>
 
   <section aria-labelledby="use">
     <h2 id="use">Use it</h2>
-<pre>pip install "belarusian-asr[server]"
+<pre>pip install "belarusian-asr[server] @ git+https://github.com/YauhenBichel/belarusian-asr"
 belarusian-asr transcribe clip.wav
 belarusian-asr serve --port 11805      # POST /v1/audio/transcriptions, POST /inference</pre>
   </section>
@@ -146,7 +148,11 @@ belarusian-asr serve --port 11805      # POST /v1/audio/transcriptions, POST /in
     }
     return { a, b, keepA, keepB };
   }
-  const mark = (words, keep, tag) => words.map((w, i) => keep.has(i) ? esc(w) : `<${tag}>${esc(w)}</${tag}>`).join(" ");
+  // Letters of Russian (и щ ъ) and Ukrainian (ї є ґ) that Belarusian does not have.
+  const FOREIGN = /[ищъїєґ]/giu;
+  const boxed = (s) => s.replace(FOREIGN, (c) => `<span class="foreign">${c}</span>`);
+  const foreignLetters = (s) => [...new Set((s.match(FOREIGN) || []).map((c) => c.toLowerCase()))];
+  const mark = (words, keep, tag) => words.map((w, i) => keep.has(i) ? boxed(esc(w)) : `<${tag}>${boxed(esc(w))}</${tag}>`).join(" ");
 
   function row(name, s) {
     return `<tr class="${ours(name) ? "ours" : ""}"><td>${esc(name)}</td><td>${pct(s.all.cer)}</td><td>${pct(s.all.wer)}</td>` +
@@ -177,7 +183,9 @@ belarusian-asr serve --port 11805      # POST /v1/audio/transcriptions, POST /in
     document.getElementById("samples").innerHTML = d.samples.map((s) => {
       const lines = Object.entries(s.outputs).map(([name, o]) => {
         const al = align(s.reference, o.text);
-        return `<div class="line"><div class="who"><em>${esc(name)}</em>CER ${pct(o.cer)}</div><div class="said">${mark(al.b, al.keepB, "ins")}</div></div>`;
+        const letters = foreignLetters(o.text);
+        const notBe = letters.length ? `<span class="not-be">not Belarusian: ${esc(letters.join(" "))}</span>` : "";
+        return `<div class="line"><div class="who"><em>${esc(name)}</em>CER ${pct(o.cer)}${notBe}</div><div class="said">${mark(al.b, al.keepB, "ins")}</div></div>`;
       });
       const best = s.outputs[mine] ? align(s.reference, s.outputs[mine].text) : null;
       const ref = best ? mark(best.a, best.keepA, "del") : esc(s.reference);

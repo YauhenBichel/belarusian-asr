@@ -28,9 +28,13 @@ against 43.9 % (4.1 times fewer). All the numbers: [docs/BENCHMARKS.md](docs/BEN
 
 ## Demo
 
-**[Listen and compare](https://yauhenbichel.github.io/belarusian-asr/)**: six recordings, with what was said, what
+**[Listen and compare](https://yauhenbichel.github.io/belarusian-asr/)** (also on
+[Hugging Face](https://huggingface.co/spaces/YauhenBichel/belarusian-asr)): six recordings, with what was said, what
 belarusian-asr wrote and what Whisper wrote. The mistakes are marked. One of the six is a recording where Whisper does
 better.
+
+The Whisper lines are not Belarusian, and that is the point: Whisper mixes Russian and Ukrainian into Belarusian
+("приправляна", "країна", "многих"). The demo boxes the letters that Belarusian does not have (и, ї).
 
 Two of them:
 
@@ -60,11 +64,12 @@ This project started when a Belarusian recording came back from an AI tool trans
 You need Python 3.11 or newer, on Linux, macOS or Windows.
 
 ```bash
-pip install belarusian-asr
+pip install git+https://github.com/YauhenBichel/belarusian-asr
 belarusian-asr transcribe clip.wav          # WAV, FLAC, OGG or MP3
 ```
 
-The model (about 460 MB) downloads the first time.
+The model (about 460 MB) downloads the first time. The package is not on PyPI yet; until it is, install from GitHub
+as above.
 
 Numbers come out as digits, the way Belarusian is written: "у 1963 годзе", "400 000", "53-гадовы". To keep them as
 spoken words, use `belarusian-asr --words transcribe clip.wav` or `Transcriber(digits=False)`.
@@ -81,7 +86,7 @@ print(asr.transcribe("clip.wav").text)
 As a server, for any app that talks to OpenAI or whisper.cpp:
 
 ```bash
-pip install "belarusian-asr[server]"
+pip install "belarusian-asr[server] @ git+https://github.com/YauhenBichel/belarusian-asr"
 belarusian-asr serve --port 11805
 curl -s 127.0.0.1:11805/v1/audio/transcriptions -F file=@clip.wav             # OpenAI style
 curl -s 127.0.0.1:11805/inference -F file=@clip.wav -F response_format=json   # whisper.cpp style
