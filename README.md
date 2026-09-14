@@ -16,16 +16,15 @@ We tested both on the same 200 Belarusian recordings (FLEURS test set), on the s
 
 | | Wrong letters | Wrong words | Time per recording |
 |---|---|---|---|
-| **belarusian-asr** | **2.9 %** | **10.6 %** | **0.16 s** |
-| Whisper large-v3 | 10.6 % | 43.9 % | 7.09 s |
+| **belarusian-asr** | **4.7 %** | **12.9 %** | **0.19 s** |
+| Whisper large-v3 | 10.4 % | 43.1 % | 7.09 s |
 
-- **3.7 times fewer wrong letters.**
-- **4.1 times fewer wrong words.** Whisper gets more than four words in ten wrong; belarusian-asr gets about one in ten.
-- **44 times faster.**
+- **2.2 times fewer wrong letters.**
+- **3.3 times fewer wrong words.** Whisper gets more than four words in ten wrong; belarusian-asr gets about one in eight.
+- **37 times faster.**
 
-These rows leave out sentences with numbers, because the test writes numbers as digits and belarusian-asr writes them as
-words. With those sentences included, belarusian-asr is still better: 6.3 % wrong letters against
-10.4 %. All the numbers: [docs/BENCHMARKS.md](docs/BENCHMARKS.md).
+On the 163 sentences without numbers the gap is bigger: 3.1 % wrong letters against 10.6 %, and 10.8 % wrong words
+against 43.9 % (4.1 times fewer). All the numbers: [docs/BENCHMARKS.md](docs/BENCHMARKS.md).
 
 ## Demo
 
@@ -41,10 +40,10 @@ Two of them:
 | What was said | Кары ўяўляе сабой страву з мяса ці гародніны, якая прыпраўлена травамі і спецыямі. |
 | **belarusian-asr** (0.0 % wrong letters) | Кары ўяўляе сабой страву з мяса ці гародніны, якая прыпраўлена травамі і спецыямі. |
 | Whisper large-v3 (7.5 % wrong letters) | Кары уяуляе сабой страву з мяса ці гародніны, якая приправляна травамі і спеціямі. |
-| [▶ Listen: FLEURS 1860](https://yauhenbichel.github.io/belarusian-asr/audio/fleurs-1860.ogg) (9.6 s) | |
-| What was said | Па звестках з канцылярыі губернатара, дзевятнаццаць з агульнай колькасці пацярпелых былі афіцэрамі паліцыі. |
-| **belarusian-asr** (3.8 % wrong letters) | Па звестках з канцылярыяй губернатара, у дзевятнаццаць з агульнай колькасці пацярпелых былі афіцэрамі паліцыі. |
-| Whisper large-v3 (21.9 % wrong letters) | Па звездках з канцеляры губернатора, 19 загульной колькасті патярпелых былі афіцэрымі паліцыі. |
+| [▶ Listen: FLEURS 1742](https://yauhenbichel.github.io/belarusian-asr/audio/fleurs-1742.ogg) (10.2 s) | |
+| What was said | Назва краіны Ганконг пазычана ў вострава Ганконг, які з'яўляецца цэнтрам прыцягнення для многіх турыстаў. |
+| **belarusian-asr** (3.9 % wrong letters) | Назва краіны ганко пазычана ў вострава ганко, які з'яўляецца цэнтрам прыцягнення для многіх турыстаў. |
+| Whisper large-v3 (15.5 % wrong letters) | Назва країны Гангкок пазычана ў острова Гангкок, які зляуляюцца центрам прытягнення для многих турыстав. |
 
 ## Why
 
@@ -66,6 +65,9 @@ belarusian-asr transcribe clip.wav          # WAV, FLAC, OGG or MP3
 ```
 
 The model (about 460 MB) downloads the first time.
+
+Numbers come out as digits, the way Belarusian is written: "у 1963 годзе", "400 000", "53-гадовы". To keep them as
+spoken words, use `belarusian-asr --words transcribe clip.wav` or `Transcriber(digits=False)`.
 
 In Python:
 
@@ -95,16 +97,18 @@ It understands only Belarusian. For other languages, point `--fallback` to a whi
   [ONNX version made by OpenVoiceOS](https://huggingface.co/OpenVoiceOS/stt_be_fastconformer_hybrid_large_pc_onnx)
   with [onnx-asr](https://github.com/istupakov/onnx-asr) and ONNX Runtime, so there is no PyTorch.
 - **Long recordings** (over 20 seconds) are cut at pauses with [Silero VAD](https://github.com/snakers4/silero-vad).
+- **Numbers:** the model says numbers in words. Our own converter (`belarusian_asr.digits`) knows every case form of
+  Belarusian numbers and writes them as digits. Single small numbers stay words ("адна з", "два дні"). No existing
+  tool did this for Belarusian.
 - **Safety:** the model files are checked against fixed SHA-256 hashes before they are used.
 - **Testing:** `belarusian-asr bench` downloads the FLEURS Belarusian test set and repeats the comparison above.
 
 ## Roadmap
 
 1. Test on real life audio: phone calls, videos and conversations, checked by Belarusian speakers.
-2. Even better accuracy: we are measuring bigger models and a Belarusian language model.
-3. An option to write numbers as digits.
-4. Word timings and live captions.
-5. A Hugging Face Space where you can try your own recording.
+2. Even better accuracy: we are measuring bigger models. A Belarusian language model did not help on the test set.
+3. Word timings and live captions.
+4. A Hugging Face Space where you can try your own recording.
 
 Help from Belarusian speakers is very welcome: [CONTRIBUTING.md](CONTRIBUTING.md).
 
