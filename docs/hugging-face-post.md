@@ -1,37 +1,37 @@
 # Hugging Face post
 
-Written for huggingface.co/posts, which caps a post at about 2,000 characters. The numbers come from
-docs/BENCHMARKS.md (FLEURS Belarusian test, the first 200 sentences, references without digits); re-check them there
-whenever the post is reused, and publish the package to PyPI before posting, since the post tells people to
-`pip install` it.
+For huggingface.co/posts, which allows about 2,000 characters. The numbers come from docs/BENCHMARKS.md (FLEURS
+Belarusian test set, the first 200 recordings, sentences without numbers). Check them there before reusing the post,
+and publish the package to PyPI first, because the post says `pip install`.
 
 ---
 
-**Belarusian speech recognition: Whisper large-v3 gets four words in ten wrong. A small model on a CPU gets one in ten.**
+**belarusian-asr: Belarusian speech to text with 4 times fewer wrong words than Whisper large-v3**
 
-I sent a Belarusian recording through my local AI gateway and it came back in English. Voxtral had translated it. Whisper large-v3 does transcribe Belarusian, but on FLEURS it gets about 10.6 % of characters and 43.9 % of words wrong.
+Whisper large-v3 gets more than four words in ten wrong in Belarusian. Voxtral Mini did not even write Belarusian — it translated my recording into English.
 
-Meanwhile NVIDIA trained a Belarusian FastConformer on Common Voice ([stt_be_fastconformer_hybrid_large_pc](https://huggingface.co/nvidia/stt_be_fastconformer_hybrid_large_pc), CC BY 4.0) — 115 M parameters, hidden inside NeMo. So I packaged it: **belarusian-asr**, ONNX Runtime only, no PyTorch, no GPU.
+So I packaged NVIDIA's Belarusian speech model ([stt_be_fastconformer_hybrid_large_pc](https://huggingface.co/nvidia/stt_be_fastconformer_hybrid_large_pc), CC BY 4.0) into a small Python package. It runs on a normal CPU. No GPU, no PyTorch.
 
-FLEURS Belarusian test, same 200 sentences, same CPU:
+Same 200 recordings from the FLEURS Belarusian test set, same computer:
 
 ```
-                     CER     WER    s/clip
-belarusian-asr       2.9 %   10.6 %  0.16
-whisper large-v3    10.6 %   43.9 %  7.09
+                   wrong letters   wrong words   time
+belarusian-asr        2.9 %          10.6 %     0.16 s
+Whisper large-v3     10.6 %          43.9 %     7.09 s
 ```
 
-(references without digits: FLEURS writes numbers as digits, this model says them in words)
+That is 3.7 times fewer wrong letters, 4.1 times fewer wrong words, and 44 times faster.
 
 ```bash
-pip install "belarusian-asr[server]"
+pip install belarusian-asr
 belarusian-asr transcribe clip.wav
-belarusian-asr serve   # OpenAI + whisper.cpp compatible API
 ```
 
-The benchmark is one command, pinned and reproducible, and the demo page lets you listen to the clips and see both transcripts side by side — including the one where Whisper wins.
+It also has a server that works with OpenAI and whisper.cpp clients, and one command that repeats the whole test.
 
-Honest limits: read speech only so far, numbers come out as words, Belarusian only. What I need most is real-world audio — phone calls, videos, conversation — and native speakers to tell me where it fails.
+On the demo page you can listen to the recordings and see both texts side by side, with the mistakes marked. I also show the one recording where Whisper does better.
+
+What it cannot do yet: it was tested on read speech, it writes numbers as words, and it knows only Belarusian. I need real life recordings — calls, videos, conversations — and Belarusian speakers to tell me where it fails.
 
 Калі вы размаўляеце па-беларуску — паспрабуйце і напішыце, дзе памыляецца.
 
