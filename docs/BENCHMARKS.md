@@ -54,7 +54,7 @@ On 5 FLEURS dev sentences through an OpenAI-compatible gateway, Voxtral Mini 3B 
 ## Reproduce
 
 ```bash
-pip install "belarusian-asr[server]"
+pip install "belarusian-asr[server] @ git+https://github.com/YauhenBichel/belarusian-asr"
 belarusian-asr --threads 12 bench --split test --out bench/full
 belarusian-asr --threads 12 bench --split test --limit 200 --out bench/vs-whisper \
   --whisper-cli ./build/bin/whisper-cli --whisper-model ggml-large-v3.bin --whisper-threads 12

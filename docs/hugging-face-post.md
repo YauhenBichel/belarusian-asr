@@ -1,8 +1,8 @@
 # Hugging Face post
 
 For huggingface.co/posts, which allows about 2,000 characters. The numbers come from docs/BENCHMARKS.md (FLEURS
-Belarusian test set, the first 200 recordings, all sentences). Check them there before reusing the post, and
-publish the package to PyPI first, because the post says `pip install`.
+Belarusian test set, the first 200 recordings, all sentences). Check them there before reusing the post. It installs
+from GitHub because the package is not on PyPI yet; after the release, `pip install belarusian-asr` can replace it.
 
 ---
 
@@ -22,8 +22,10 @@ Whisper large-v3     10.4 %          43.1 %     7.09 s
 
 That is 2.2 times fewer wrong letters, 3.3 times fewer wrong words, and 37 times faster. It writes numbers as digits, like Belarusian text does, with a number converter I wrote because no tool did it for Belarusian.
 
+Listen and compare: https://huggingface.co/spaces/YauhenBichel/belarusian-asr
+
 ```bash
-pip install belarusian-asr
+pip install git+https://github.com/YauhenBichel/belarusian-asr
 belarusian-asr transcribe clip.wav
 ```
 
