@@ -5,6 +5,9 @@
 Clips up to `whole_up_to_s` seconds (default 20) go to the model in one piece: on FLEURS that was better than
 cutting them (CER 2.6 % against 3.4 % on references without digits). Longer audio, which the model cannot take,
 is cut into speech segments of at most `max_segment_s` seconds by Silero VAD.
+
+The model says numbers in words; they are written as digits, as Belarusian text writes them (digits.py).
+`digits=False` keeps the words.
 """
 
 from __future__ import annotations
@@ -16,6 +19,7 @@ from typing import Any
 import numpy as np
 
 from . import audio as audio_io
+from .digits import to_digits
 from .models import FASTCONFORMER, SILERO_VAD, fetch
 
 
@@ -42,9 +46,11 @@ class Transcriber:
         threads: int | None = None,
         model: Any = None,
         vad_model: Any = None,
+        digits: bool = True,
     ) -> None:
         self.cache, self.whole_up_to_s, self.max_segment_s, self.threads = cache, whole_up_to_s, max_segment_s, threads
         self._model, self._segmenter, self._vad_model = model, None, vad_model
+        self.digits = digits
 
     def _session_options(self) -> Any:
         if not self.threads:
@@ -64,6 +70,9 @@ class Transcriber:
                                               sess_options=self._session_options())
         return self._model
 
+    def _written(self, text: str) -> str:
+        return to_digits(text) if self.digits else text
+
     def _segments_of(self, samples: np.ndarray, rate: int) -> list[Segment]:
         if self._segmenter is None:
             vad = self._vad_model
@@ -73,7 +82,7 @@ class Transcriber:
                 vad = onnx_asr.load_vad("silero", fetch(SILERO_VAD, self.cache))
             self._segmenter = self.model.with_vad(vad, max_speech_duration_s=self.max_segment_s,
                                                   min_silence_duration_ms=150, speech_pad_ms=80)
-        return [Segment(round(float(s.start), 2), round(float(s.end), 2), s.text.strip())
+        return [Segment(round(float(s.start), 2), round(float(s.end), 2), self._written(s.text.strip()))
                 for s in self._segmenter.recognize(samples, sample_rate=rate)]
 
     def transcribe(self, source: str | Path | bytes | np.ndarray, sample_rate: int | None = None) -> Result:
@@ -86,7 +95,7 @@ class Transcriber:
             samples, rate = audio_io.load(source)
         duration = round(len(samples) / rate, 2)
         if duration <= self.whole_up_to_s:
-            text = str(self.model.recognize(samples, sample_rate=rate)).strip()
+            text = self._written(str(self.model.recognize(samples, sample_rate=rate)).strip())
             return Result(text, duration, [Segment(0.0, duration, text)])
         segments = [s for s in self._segments_of(samples, rate) if s.text]
         return Result(" ".join(s.text for s in segments), duration, segments)

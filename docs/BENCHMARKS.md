@@ -7,7 +7,7 @@ All numbers are from `belarusian-asr bench`, on AMD Ryzen AI Max+ 395 (16 cores,
 - **Data:** FLEURS Belarusian (`google/fleurs`, `be_by`), CC BY 4.0, pinned to revision `70bb2e84`; the audio archives are checked by SHA-256 and the transcript files by their git blob id.
 - **One recording per sentence:** FLEURS reads each sentence two or three times; only the first available recording is scored, so no sentence counts twice.
 - **Scores:** corpus CER and WER (total edits over total length), after lower-casing, removing punctuation and stress marks, and unifying apostrophes.
-- **No digits:** FLEURS writes numbers as digits ("4892 м"). belarusian-asr says them in words ("чатыры тысячы восемсот дзевяноста два"), which is right but scored as wrong, so every table also shows the sentences whose reference has no digits.
+- **Numbers:** FLEURS mostly writes numbers as digits ("4892 м"). The model says them in words ("чатыры тысячы восемсот дзевяноста два"); belarusian-asr writes those as digits (`belarusian_asr.digits`), which is what these tables score. FLEURS is not consistent: some references keep numbers as words ("восемдзесят працэнтаў"), and a number written differently from the reference counts as wrong either way. So every table also shows the sentences whose reference has no digits.
 - **Speed:** wall-clock seconds per clip, including audio decoding; real-time factor is processing time over audio duration.
 
 ## FLEURS Belarusian test, all 349 sentences
@@ -16,13 +16,15 @@ All numbers are from `belarusian-asr bench`, on AMD Ryzen AI Max+ 395 (16 cores,
 
 | system | CER | WER | CER, no digits | WER, no digits | s per clip | real-time factor |
 |---|---|---|---|---|---|---|
-| **belarusian-asr (FastConformer)** | **6.13 %** | **14.16 %** | **2.80 %** | **10.62 %** | **0.16** | **0.01** |
+| **belarusian-asr (FastConformer)** | **4.75 %** | **13.19 %** | **2.96 %** | **10.76 %** | **0.20** | **0.013** |
 
 CER by clip length (sentences in brackets):
 
 | system | 0-10s | 10-15s | 15-20s | 20-25s | 25s+ |
 |---|---|---|---|---|---|
-| belarusian-asr (FastConformer) | 4.40 % (67) | 5.67 % (122) | 5.33 % (108) | 8.99 % (35) | 8.31 % (17) |
+| belarusian-asr (FastConformer) | 3.34 % (67) | 4.44 % (122) | 4.14 % (108) | 6.57 % (35) | 6.94 % (17) |
+
+Before numbers were written as digits (0.1.0 drafts): CER 6.13 %, WER 14.16 %; without digits 2.80 % and 10.62 %.
 
 ## Against whisper.cpp large-v3: the first 200 test sentences
 
@@ -30,14 +32,19 @@ Same clips for both systems, 15.0 s each on average, 163 without digits. whisper
 
 | system | CER | WER | CER, no digits | WER, no digits | s per clip | real-time factor |
 |---|---|---|---|---|---|---|
-| **belarusian-asr (FastConformer)** | **6.34 %** | **14.08 %** | **2.89 %** | **10.64 %** | **0.16** | **0.011** |
+| **belarusian-asr (FastConformer)** | **4.70 %** | **12.94 %** | **3.10 %** | **10.78 %** | **0.19** | **0.013** |
 | whisper.cpp large-v3 | 10.45 % | 43.06 % | 10.64 % | 43.89 % | 7.09 | 0.474 |
 
 CER by clip length:
 
 | system | 0-10s | 10-15s | 15-20s | 20-25s | 25s+ |
 |---|---|---|---|---|---|
-| belarusian-asr (FastConformer) | 3.89 % (40) | 6.90 % (73) | 4.61 % (56) | 10.50 % (19) | 7.38 % (12) |
+| belarusian-asr (FastConformer) | 4.22 % (40) | 4.99 % (73) | 3.57 % (56) | 6.36 % (19) | 5.79 % (12) |
+
+whisper.cpp's hypotheses and times are from its run for 0.1.0; its output does not depend on belarusian-asr. Before
+numbers were written as digits, belarusian-asr scored CER 6.34 % and WER 14.08 % here (2.89 % and 10.64 % without
+digits). Numbers as digits help the 37 sentences with digits (CER 19.0 % to 10.6 %) and cost a little on the others,
+where FLEURS sometimes writes numbers as words.
 | whisper.cpp large-v3 | 9.66 % (40) | 9.63 % (73) | 8.89 % (56) | 9.26 % (19) | 20.03 % (12) |
 
 ## Earlier: Voxtral Mini 3B

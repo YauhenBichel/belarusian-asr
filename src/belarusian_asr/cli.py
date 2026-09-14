@@ -16,6 +16,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="belarusian-asr", description="Belarusian speech recognition on the CPU.")
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("--threads", type=int, help="CPU threads for the model (default: ONNX Runtime's choice)")
+    parser.add_argument("--words", action="store_true", help="keep numbers as spoken words instead of digits")
     sub = parser.add_subparsers(dest="command", required=True)
 
     t = sub.add_parser("transcribe", help="print the text of audio files (WAV, FLAC, OGG, MP3)")
@@ -49,7 +50,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "transcribe":
-        engine, status = Transcriber(threads=args.threads), 0
+        engine, status = Transcriber(threads=args.threads, digits=not args.words), 0
         for path in args.files:
             try:
                 result = engine.transcribe(path)
@@ -69,13 +70,13 @@ def main(argv: list[str] | None = None) -> int:
 
         from .server import create_app
 
-        uvicorn.run(create_app(Transcriber(threads=args.threads), fallback_url=args.fallback),
+        uvicorn.run(create_app(Transcriber(threads=args.threads, digits=not args.words), fallback_url=args.fallback),
                     host=args.host, port=args.port, log_level="info")
         return 0
 
     from . import bench
 
-    engine = Transcriber(threads=args.threads)
+    engine = Transcriber(threads=args.threads, digits=not args.words)
     systems = {"belarusian-asr (FastConformer)": lambda path: engine.transcribe(path).text}
     if args.whisper_cli:
         if not args.whisper_model:
