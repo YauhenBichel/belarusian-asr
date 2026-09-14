@@ -153,7 +153,7 @@ class Resume(unittest.TestCase):
 
             with self.assertRaises(KeyboardInterrupt):
                 bench.score(clips(), "test", out, {"sys": first}, log=lambda line: None)
-            self.assertEqual(len((out / "fleurs-be-test.partial.jsonl").read_text().splitlines()), 2)
+            self.assertEqual(len((out / "fleurs-be-test.partial.jsonl").read_text(encoding="utf-8").splitlines()), 2)
 
             def second(path):
                 calls.append("again " + path.name)
