@@ -1,0 +1,24 @@
+belarusian-asr
+Copyright 2026 Yauhen Bichel
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This package downloads, on first use, files it does not distribute. Each is pinned
+by revision and verified by SHA-256 before it is used.
+
+- NVIDIA NeMo FastConformer-Hybrid Large (Belarusian, punctuation and
+  capitalization), nvidia/stt_be_fastconformer_hybrid_large_pc - CC BY 4.0,
+  trained on Mozilla Common Voice 12. ONNX export by OpenVoiceOS:
+  https://huggingface.co/OpenVoiceOS/stt_be_fastconformer_hybrid_large_pc_onnx
+  https://huggingface.co/nvidia/stt_be_fastconformer_hybrid_large_pc
+- Silero VAD - MIT. ONNX packaging for onnx-asr:
+  https://huggingface.co/istupakov/silero-vad-onnx
+  https://github.com/snakers4/silero-vad
+
+The benchmark command downloads FLEURS (google/fleurs, Belarusian be_by) - CC BY 4.0,
+Conneau et al., "FLEURS: Few-shot Learning Evaluation of Universal Representations of
+Speech", 2022. The demo page includes a few unmodified FLEURS clips under that license.
+
+Runtime libraries: onnx-asr (MIT), ONNX Runtime (MIT), soundfile (BSD-3-Clause),
+NumPy (BSD-3-Clause); with the server extra, Starlette (BSD-3-Clause), Uvicorn
+(BSD-3-Clause), python-multipart (Apache-2.0), HTTPX (BSD-3-Clause).

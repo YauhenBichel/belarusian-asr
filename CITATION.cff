@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it, and credit the model it runs (NVIDIA, CC BY 4.0)."
+title: "belarusian-asr: Belarusian speech recognition on the CPU"
+authors:
+  - family-names: Bichel
+    given-names: Yauhen
+type: software
+license: Apache-2.0
+repository-code: "https://github.com/YauhenBichel/belarusian-asr"
+url: "https://yauhenbichel.github.io/belarusian-asr/"
+version: 0.1.0
+date-released: "2026-09-14"
+keywords:
+  - Belarusian
+  - speech recognition
+  - ASR
+  - ONNX
+  - FastConformer
+references:
+  - type: software
+    title: "stt_be_fastconformer_hybrid_large_pc"
+    authors:
+      - name: NVIDIA
+    url: "https://huggingface.co/nvidia/stt_be_fastconformer_hybrid_large_pc"
+    license: CC-BY-4.0
+  - type: article
+    title: "FLEURS: Few-shot Learning Evaluation of Universal Representations of Speech"
+    authors:
+      - family-names: Conneau
+        given-names: Alexis
+      - name: "and others"
+    year: 2022

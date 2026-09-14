@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / py${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: python -m pip install -e ".[server]" build
+      - name: Unit tests (no model, no network)
+        run: python -m unittest discover -s tests -q
+      - name: Build
+        run: python -m build
+
+  model:
+    # The real model on a real Belarusian clip: download, verify, transcribe, and the server end to end.
+    name: model on ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: python -m pip install ".[server]"
+      - name: Download and verify the model
+        run: belarusian-asr download
+      - name: Transcribe a FLEURS clip
+        shell: bash
+        run: |
+          set -euo pipefail
+          text=$(belarusian-asr transcribe docs/demo/audio/sample-1.ogg)
+          echo "$text"
+          echo "$text" | grep -qi "фестывал"
+      - name: The server answers both dialects
+        shell: bash
+        run: |
+          set -euo pipefail
+          belarusian-asr serve --port 18805 & pid=$!
+          for _ in $(seq 1 60); do curl -sf http://127.0.0.1:18805/health && break; sleep 1; done
+          curl -sf http://127.0.0.1:18805/v1/audio/transcriptions -F file=@docs/demo/audio/sample-1.ogg | grep -qi "фестывал"
+          curl -sf http://127.0.0.1:18805/inference -F file=@docs/demo/audio/sample-1.ogg -F response_format=verbose_json | grep -q belarusian
+          kill "$pid"
