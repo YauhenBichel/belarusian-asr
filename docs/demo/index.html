@@ -184,7 +184,7 @@ belarusian-asr serve --port 11805      # POST /v1/audio/transcriptions, POST /in
       return `<article class="sample"><div class="sample-head"><audio controls preload="none" src="${esc(s.audio)}"></audio><span>FLEURS ${esc(s.id)} · ${s.seconds} s</span></div>` +
         `<div class="line ref"><div class="who"><em>reference</em>FLEURS</div><div class="said">${ref}</div></div>${lines.join("")}</article>`;
     }).join("");
-    document.getElementById("measured").textContent = `Measured with belarusian-asr bench on a 32-core AMD CPU, 12 threads per system.`;
+    document.getElementById("measured").textContent = `Measured with belarusian-asr bench on an AMD Ryzen AI Max+ 395 (16 cores, 32 threads), 12 threads per system.`;
   }).catch((e) => {
     document.getElementById("headline").innerHTML = `<p>Results could not be loaded (${esc(e.message)}).</p>`;
   });

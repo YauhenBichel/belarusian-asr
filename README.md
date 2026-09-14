@@ -23,21 +23,23 @@ Asked for Belarusian, general speech models do badly:
 
 ## Accuracy
 
-FLEURS Belarusian, measured on a 32-core CPU. One recording per sentence. CER and WER are corpus rates after
+FLEURS Belarusian test split, on AMD Ryzen AI Max+ 395 (16 cores, 32 threads, AVX-512), Linux, ONNX Runtime 1.30, 12 threads per system. One recording per sentence; CER and WER are corpus rates after
 lower-casing and removing punctuation.
 
-**FLEURS dev, the first 100 sentences** (15.4 s of audio each on average):
+**The first 200 test sentences, both systems on the same clips** (15.0 s of audio each on average):
 
-| system | CER | WER | CER, references without digits (84) | WER, without digits | seconds per clip |
-|---|---|---|---|---|---|
-| **belarusian-asr** (FastConformer, ONNX, CPU) | **6.7 %** | **14.7 %** | **2.6 %** | **9.9 %** | **0.27** |
-| whisper.cpp large-v3, CPU, 12 threads | 10.5 % | 44.6 % | 10.1 % | 44.2 % | 8.2 |
-| Voxtral Mini 3B (5 of those clips) | 89.6 % | 99.9 % | | | 6.0 |
+| system | CER | WER | CER, no digits | WER, no digits | s per clip | real-time factor |
+|---|---|---|---|---|---|---|
+| **belarusian-asr (FastConformer)** | **6.34 %** | **14.08 %** | **2.89 %** | **10.64 %** | **0.16** | **0.011** |
+| whisper.cpp large-v3 | 10.45 % | 43.06 % | 10.64 % | 43.89 % | 7.09 | 0.474 |
 
-"Without digits": FLEURS writes numbers as digits ("4892 м") and this model says them in words ("чатыры тысячы
-восемсот дзевяноста два"), which is right but scores as wrong. The full test split is in
-[docs/BENCHMARKS.md](docs/BENCHMARKS.md). Accuracy drops on clips longer than 20 seconds (see there); longer audio is
-cut into speech segments automatically.
+**All 349 test sentences:** CER 6.13 %, WER 14.16 %; on the 280 without digits,
+CER 2.80 %, WER 10.62 %; 0.16 s per clip.
+
+"No digits": FLEURS writes numbers as digits ("4892 м") and this model says them in words ("чатыры тысячы
+восемсот дзевяноста два"), which is right but scores as wrong. Tables by clip length and how to reproduce:
+[docs/BENCHMARKS.md](docs/BENCHMARKS.md). Accuracy drops on clips over 20 seconds; longer audio is cut into speech
+segments automatically. Listen to real transcriptions side by side on the [demo page](https://yauhenbichel.github.io/belarusian-asr/).
 
 ## Install
 
