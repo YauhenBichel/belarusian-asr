@@ -125,6 +125,21 @@ Help from Belarusian speakers is very welcome: [CONTRIBUTING.md](CONTRIBUTING.md
 </p>
 <!-- readme: contributors,bots/- -end -->
 
+## Where it is used
+
+This recogniser is the gate on a Belarusian song pipeline: every sung line is transcribed and
+scored against the words it was meant to be, and a take is kept only when the words come back.
+The result: [«Chary Nochy» on Spotify](https://open.spotify.com/album/1RG2w6mCmm4GkbOHMQNUse) · [@y6574694 on TikTok](https://www.tiktok.com/@y6574694).
+The singing there is AI-generated and labelled as such.
+
+## Belarusian language resources
+
+Worth knowing if you work with Belarusian: the **National Corpus of the Belarusian Language**,
+[bnkorpus.info](https://bnkorpus.info/) — a 177-million-token corpus with audio search, the
+[Grammar Database](https://github.com/Belarus/GrammarDB) (millions of forms with stress and
+morphology, CC BY-SA 4.0), the phonetic converter [BelG2P](https://github.com/Belarus/BelG2P) and
+the [BelVoice](https://github.com/Belarus/BelVoice) speech framework. This project does not use that data yet; the corpus's own audio collection and its texts are the obvious next step for a Belarusian language model.
+
 ## Licences
 
 The code is Apache-2.0 ([LICENSE](LICENSE)). The model is CC BY 4.0 by NVIDIA; if you build an app with it, credit
