@@ -94,6 +94,17 @@ curl -s 127.0.0.1:11805/inference -F file=@clip.wav -F response_format=json   # 
 
 It understands only Belarusian. For other languages, point `--fallback` to a whisper.cpp server.
 
+## What kind of model this is
+
+**Automatic speech recognition (ASR).** A speech model: audio goes in, text comes
+out. It is not a language model — it does not answer questions, continue a
+sentence or hold a conversation, and asking it to would mean nothing.
+
+Here that is a **FastConformer hybrid** — a convolution-and-attention acoustic
+model, about 460 MB, run through ONNX Runtime on the CPU. Its sibling in this
+family is [belarusian-tts](https://github.com/YauhenBichel/belarusian-tts),
+which goes the other way: text in, audio out.
+
 ## How it works
 
 - **The model** is NVIDIA's Belarusian speech model,
