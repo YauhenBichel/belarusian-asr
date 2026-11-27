@@ -1,12 +1,12 @@
 # belarusian-asr
 
 [![CI](https://github.com/YauhenBichel/belarusian-asr/actions/workflows/ci.yml/badge.svg)](https://github.com/YauhenBichel/belarusian-asr/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/belarusian-asr.svg)](https://pypi.org/project/belarusian-asr/)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 ![language: Belarusian](https://img.shields.io/badge/language-беларуская-c8313e)
 [![Demo](https://img.shields.io/badge/demo-listen%20and%20compare-c8313e)](https://yauhenbichel.github.io/belarusian-asr/)
 
-**Belarusian speech to text.** It runs on a normal computer: no GPU needed.
+**Belarusian speech to text.** belarusian-asr is a free, open Belarusian speech recognition tool (speech-to-text, ASR) for
+developers and anyone with Belarusian audio: it runs on a normal computer CPU, with no GPU and no PyTorch.
 
 **Беларускае маўленне ў тэкст.** Працуе на звычайным камп'ютары, без відэакарты.
 
@@ -59,7 +59,7 @@ Popular speech models are bad at Belarusian:
 
 This project started when a Belarusian recording came back from an AI tool translated into English.
 
-## Use
+## Quick start
 
 You need Python 3.11 or newer, on Linux, macOS or Windows.
 
@@ -70,6 +70,16 @@ belarusian-asr transcribe clip.wav          # WAV, FLAC, OGG or MP3
 
 The model (about 460 MB) downloads the first time. The package is not on PyPI yet; until it is, install from GitHub
 as above.
+
+Try it on the clip that ships in the repository, `docs/demo/audio/sample-1.ogg` (a FLEURS test recording). The
+repository's own CI runs exactly this command on Ubuntu with the real model, and this is the line it printed:
+
+```console
+$ belarusian-asr transcribe docs/demo/audio/sample-1.ogg
+На некаторых фестывалях сем'і з маленькімі дзецьмі могуць карыстацца спецыяльнымі кемпінгамі.
+```
+
+The output above is copied from that CI log.
 
 Numbers come out as digits, the way Belarusian is written: "у 1963 годзе", "400 000", "53-гадовы". To keep them as
 spoken words, use `belarusian-asr --words transcribe clip.wav` or `Transcriber(digits=False)`.
@@ -118,6 +128,47 @@ which goes the other way: text in, audio out.
   tool did this for Belarusian.
 - **Safety:** the model files are checked against fixed SHA-256 hashes before they are used.
 - **Testing:** `belarusian-asr bench` downloads the FLEURS Belarusian test set and repeats the comparison above.
+
+## When to use it, and when not
+
+Use it to turn Belarusian recordings (interviews, lectures, voice notes, song lines) into text on your own machine,
+or to give an app a local, OpenAI-compatible Belarusian transcription endpoint.
+
+Do not use it for other languages (it understands only Belarusian), for live captions (not yet; see the roadmap),
+or where a wrong word could hurt someone. It is tested on read speech (FLEURS), not yet on phone calls or noisy
+conversation.
+
+## FAQ
+
+### How do I transcribe a Belarusian audio file?
+
+Install it as in the [quick start](#quick-start) and run `belarusian-asr transcribe clip.wav`. WAV, FLAC, OGG and MP3
+work.
+
+### Does it send my audio anywhere?
+
+No. Recognition runs on your CPU. The network is used to download the model files once (from Hugging Face and
+GitHub, checked against fixed SHA-256 hashes). The server listens on `127.0.0.1` by default. Only if you start it
+with `--fallback URL` are recordings in other languages forwarded to that whisper.cpp server, which you choose.
+
+### Does it need a GPU or PyTorch?
+
+No. It uses ONNX Runtime on the CPU.
+
+### How is it different from Whisper?
+
+Whisper large-v3 mixes Russian and Ukrainian into Belarusian. On 200 FLEURS Belarusian test recordings it got 43.1 %
+of words wrong against 12.9 % here (table above, all numbers in [docs/BENCHMARKS.md](docs/BENCHMARKS.md)). Whisper
+covers about 100 languages; this covers one.
+
+### Can I use it instead of the OpenAI transcription API?
+
+For Belarusian, yes: `belarusian-asr serve` answers `/v1/audio/transcriptions` and the whisper.cpp `/inference`
+route. It does not copy every option of the OpenAI API.
+
+### Is it on PyPI?
+
+Not yet. Install from GitHub as shown above.
 
 ## Roadmap
 
